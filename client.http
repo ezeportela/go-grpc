@@ -1,0 +1,15 @@
+proto < ./studentpb/student.proto
+@host=localhost:5060
+
+GRPC /StudentService/GetStudent
+{
+    "id": "1"
+}
+
+###
+GRPC /StudentService/SetStudent
+{
+    "id": "1",
+    "name": "Ezequiel",
+    "age": 25
+}
