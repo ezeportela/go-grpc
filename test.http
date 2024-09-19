@@ -12,3 +12,24 @@ GRPC /TestService/SetTest
     "id": "t1",
     "name": "Golang 101"
 }
+
+###
+GRPC /TestService/SetQuestion
+{
+    "id": "q1",
+    "question": "What is Golang?",
+    "answer": "A programming language",
+    "test_id": "t1"
+}
+{
+    "id": "q2",
+    "question": "What is a struct?",
+    "answer": "A data structure",
+    "test_id": "t1"
+}
+{
+    "id": "q3",
+    "question": "What is a pointer?",
+    "answer": "A reference to a memory address",
+    "test_id": "t1"
+}

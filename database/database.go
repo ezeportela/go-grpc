@@ -55,3 +55,8 @@ func (r *PostgresRepository) SetTest(ctx context.Context, test *models.Test) err
 	_, err := r.db.ExecContext(ctx, "INSERT INTO tests (id, name) VALUES ($1, $2)", test.Id, test.Name)
 	return err
 }
+
+func (r *PostgresRepository) SetQuestion(ctx context.Context, question *models.Question) error {
+	_, err := r.db.ExecContext(ctx, "INSERT INTO questions (id, test_id, question, answer) VALUES ($1, $2, $3, $4)", question.Id, question.TestId, question.Question, question.Answer)
+	return err
+}

@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"io"
+	"log"
 
 	"github.com/ezeportela/go-grpc/models"
 	"github.com/ezeportela/go-grpc/repositories"
@@ -45,4 +47,36 @@ func (s *TestServer) SetTest(ctx context.Context, req *testpb.Test) (*testpb.Set
 		Id:   test.Id,
 		Name: test.Name,
 	}, nil
+}
+
+func (s *TestServer) SetQuestion(stream testpb.TestService_SetQuestionServer) error {
+	questions := make([]*models.Question, 0)
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Error reading stream: %v", err)
+			return err
+		}
+		questions = append(questions, &models.Question{
+			Id:       msg.Id,
+			TestId:   msg.TestId,
+			Question: msg.Question,
+			Answer:   msg.Answer,
+		})
+	}
+
+	for _, question := range questions {
+		if err := s.repo.SetQuestion(stream.Context(), question); err != nil {
+			return stream.SendAndClose(&testpb.SetQuestionResponse{
+				Ok: false,
+			})
+		}
+	}
+
+	return stream.SendAndClose(&testpb.SetQuestionResponse{
+		Ok: true,
+	})
 }
