@@ -3,13 +3,13 @@ proto < ./studentpb/student.proto
 
 GRPC /StudentService/GetStudent
 {
-    "id": "1"
+    "id": "s1"
 }
 
 ###
 GRPC /StudentService/SetStudent
 {
-    "id": "1",
+    "id": "s1",
     "name": "Ezequiel",
     "age": 25
 }

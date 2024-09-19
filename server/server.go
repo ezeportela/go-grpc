@@ -8,18 +8,18 @@ import (
 	"github.com/ezeportela/go-grpc/studentpb"
 )
 
-type Server struct {
+type StudentServer struct {
 	repo repositories.Repository
 	studentpb.UnimplementedStudentServiceServer
 }
 
-func NewStudentServer(repo repositories.Repository) *Server {
-	return &Server{
+func NewStudentServer(repo repositories.Repository) *StudentServer {
+	return &StudentServer{
 		repo: repo,
 	}
 }
 
-func (s *Server) GetStudent(ctx context.Context, req *studentpb.GetStudentRequest) (*studentpb.Student, error) {
+func (s *StudentServer) GetStudent(ctx context.Context, req *studentpb.GetStudentRequest) (*studentpb.Student, error) {
 	student, err := s.repo.GetStudent(ctx, req.Id)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func (s *Server) GetStudent(ctx context.Context, req *studentpb.GetStudentReques
 	}, nil
 }
 
-func (s *Server) SetStudent(ctx context.Context, req *studentpb.Student) (*studentpb.SetStudentResponse, error) {
+func (s *StudentServer) SetStudent(ctx context.Context, req *studentpb.Student) (*studentpb.SetStudentResponse, error) {
 	student := &models.Student{
 		Id:   req.Id,
 		Name: req.Name,
