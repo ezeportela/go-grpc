@@ -1,0 +1,14 @@
+proto < ./testpb/test.proto
+@host=localhost:5061
+
+GRPC /TestService/GetTest
+{
+    "id": "1"
+}
+
+###
+GRPC /TestService/SetTest
+{
+    "id": "1",
+    "name": "Ezequiel"
+}

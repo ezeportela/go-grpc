@@ -1,11 +1,32 @@
 services:
   postgres:
     build: ./database
-
     ports:
       - "5432:5432"
-
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin1234
       POSTGRES_DB: mydb
+    restart: always
+
+  student-service:
+    build: '.'
+    command: "server-student"
+    depends_on:
+      - postgres
+    ports:
+      - "5060:8080"
+    environment:
+      PORT: :8080
+      DB_URL: "postgres://postgres:admin1234@postgres:5432/mydb?sslmode=disable"
+
+  test-service:
+    build: '.'
+    command: "server-test"
+    depends_on:
+      - postgres
+    ports:
+      - "5061:8080"
+    environment:
+      PORT: :8080
+      DB_URL: "postgres://postgres:admin1234@postgres:5432/mydb?sslmode=disable"

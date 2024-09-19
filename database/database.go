@@ -39,3 +39,19 @@ func (r *PostgresRepository) SetStudent(ctx context.Context, student *models.Stu
 	_, err := r.db.ExecContext(ctx, "INSERT INTO students (id, name, age) VALUES ($1, $2, $3)", student.Id, student.Name, student.Age)
 	return err
 }
+
+func (r *PostgresRepository) GetTest(ctx context.Context, id string) (*models.Test, error) {
+	row := r.db.QueryRowContext(ctx, "SELECT id, name FROM tests WHERE id = $1", id)
+
+	var test models.Test
+	if err := row.Scan(&test.Id, &test.Name); err != nil {
+		return nil, err
+	}
+
+	return &test, nil
+}
+
+func (r *PostgresRepository) SetTest(ctx context.Context, test *models.Test) error {
+	_, err := r.db.ExecContext(ctx, "INSERT INTO tests (id, name) VALUES ($1, $2)", test.Id, test.Name)
+	return err
+}

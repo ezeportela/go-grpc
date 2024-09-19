@@ -7,7 +7,7 @@ import (
 
 	"github.com/ezeportela/go-grpc/database"
 	"github.com/ezeportela/go-grpc/server"
-	"github.com/ezeportela/go-grpc/studentpb"
+	"github.com/ezeportela/go-grpc/testpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -24,7 +24,7 @@ func main() {
 
 	repo := database.NewPostgresRepository(dbUrl)
 
-	server := server.NewStudentServer(repo)
+	server := server.NewTestServer(repo)
 
 	if err != nil {
 		log.Fatal(err)
@@ -32,7 +32,7 @@ func main() {
 
 	s := grpc.NewServer()
 
-	studentpb.RegisterStudentServiceServer(s, server)
+	testpb.RegisterTestServiceServer(s, server)
 
 	reflection.Register(s)
 
