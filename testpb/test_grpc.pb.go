@@ -25,6 +25,7 @@ const (
 	TestService_SetQuestion_FullMethodName        = "/test.TestService/SetQuestion"
 	TestService_EnrollStudents_FullMethodName     = "/test.TestService/EnrollStudents"
 	TestService_GetStudentsPerTest_FullMethodName = "/test.TestService/GetStudentsPerTest"
+	TestService_TakeTest_FullMethodName           = "/test.TestService/TakeTest"
 )
 
 // TestServiceClient is the client API for TestService service.
@@ -36,6 +37,7 @@ type TestServiceClient interface {
 	SetQuestion(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[Question, SetQuestionResponse], error)
 	EnrollStudents(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[EnrollmentRequest, SetQuestionResponse], error)
 	GetStudentsPerTest(ctx context.Context, in *GetStudentsPerTestRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[studentpb.Student], error)
+	TakeTest(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[TakeTestRequest, Question], error)
 }
 
 type testServiceClient struct {
@@ -111,6 +113,19 @@ func (c *testServiceClient) GetStudentsPerTest(ctx context.Context, in *GetStude
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type TestService_GetStudentsPerTestClient = grpc.ServerStreamingClient[studentpb.Student]
 
+func (c *testServiceClient) TakeTest(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[TakeTestRequest, Question], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &TestService_ServiceDesc.Streams[3], TestService_TakeTest_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[TakeTestRequest, Question]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TestService_TakeTestClient = grpc.BidiStreamingClient[TakeTestRequest, Question]
+
 // TestServiceServer is the server API for TestService service.
 // All implementations must embed UnimplementedTestServiceServer
 // for forward compatibility.
@@ -120,6 +135,7 @@ type TestServiceServer interface {
 	SetQuestion(grpc.ClientStreamingServer[Question, SetQuestionResponse]) error
 	EnrollStudents(grpc.ClientStreamingServer[EnrollmentRequest, SetQuestionResponse]) error
 	GetStudentsPerTest(*GetStudentsPerTestRequest, grpc.ServerStreamingServer[studentpb.Student]) error
+	TakeTest(grpc.BidiStreamingServer[TakeTestRequest, Question]) error
 	mustEmbedUnimplementedTestServiceServer()
 }
 
@@ -144,6 +160,9 @@ func (UnimplementedTestServiceServer) EnrollStudents(grpc.ClientStreamingServer[
 }
 func (UnimplementedTestServiceServer) GetStudentsPerTest(*GetStudentsPerTestRequest, grpc.ServerStreamingServer[studentpb.Student]) error {
 	return status.Errorf(codes.Unimplemented, "method GetStudentsPerTest not implemented")
+}
+func (UnimplementedTestServiceServer) TakeTest(grpc.BidiStreamingServer[TakeTestRequest, Question]) error {
+	return status.Errorf(codes.Unimplemented, "method TakeTest not implemented")
 }
 func (UnimplementedTestServiceServer) mustEmbedUnimplementedTestServiceServer() {}
 func (UnimplementedTestServiceServer) testEmbeddedByValue()                     {}
@@ -227,6 +246,13 @@ func _TestService_GetStudentsPerTest_Handler(srv interface{}, stream grpc.Server
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type TestService_GetStudentsPerTestServer = grpc.ServerStreamingServer[studentpb.Student]
 
+func _TestService_TakeTest_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(TestServiceServer).TakeTest(&grpc.GenericServerStream[TakeTestRequest, Question]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TestService_TakeTestServer = grpc.BidiStreamingServer[TakeTestRequest, Question]
+
 // TestService_ServiceDesc is the grpc.ServiceDesc for TestService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -258,6 +284,12 @@ var TestService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "GetStudentsPerTest",
 			Handler:       _TestService_GetStudentsPerTest_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "TakeTest",
+			Handler:       _TestService_TakeTest_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "testpb/test.proto",
