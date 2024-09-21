@@ -9,7 +9,7 @@ GRPC /StudentService/GetStudent
 ###
 GRPC /StudentService/SetStudent
 {
-    "id": "s1",
-    "name": "Ezequiel",
-    "age": 25
+    "id": "s3",
+    "name": "Student 3",
+    "age": 24
 }

@@ -8,6 +8,7 @@ package testpb
 
 import (
 	context "context"
+	studentpb "github.com/ezeportela/go-grpc/studentpb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -19,9 +20,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TestService_GetTest_FullMethodName     = "/test.TestService/GetTest"
-	TestService_SetTest_FullMethodName     = "/test.TestService/SetTest"
-	TestService_SetQuestion_FullMethodName = "/test.TestService/SetQuestion"
+	TestService_GetTest_FullMethodName            = "/test.TestService/GetTest"
+	TestService_SetTest_FullMethodName            = "/test.TestService/SetTest"
+	TestService_SetQuestion_FullMethodName        = "/test.TestService/SetQuestion"
+	TestService_EnrollStudents_FullMethodName     = "/test.TestService/EnrollStudents"
+	TestService_GetStudentsPerTest_FullMethodName = "/test.TestService/GetStudentsPerTest"
 )
 
 // TestServiceClient is the client API for TestService service.
@@ -31,6 +34,8 @@ type TestServiceClient interface {
 	GetTest(ctx context.Context, in *GetTestRequest, opts ...grpc.CallOption) (*Test, error)
 	SetTest(ctx context.Context, in *Test, opts ...grpc.CallOption) (*SetTestResponse, error)
 	SetQuestion(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[Question, SetQuestionResponse], error)
+	EnrollStudents(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[EnrollmentRequest, SetQuestionResponse], error)
+	GetStudentsPerTest(ctx context.Context, in *GetStudentsPerTestRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[studentpb.Student], error)
 }
 
 type testServiceClient struct {
@@ -74,6 +79,38 @@ func (c *testServiceClient) SetQuestion(ctx context.Context, opts ...grpc.CallOp
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type TestService_SetQuestionClient = grpc.ClientStreamingClient[Question, SetQuestionResponse]
 
+func (c *testServiceClient) EnrollStudents(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[EnrollmentRequest, SetQuestionResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &TestService_ServiceDesc.Streams[1], TestService_EnrollStudents_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[EnrollmentRequest, SetQuestionResponse]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TestService_EnrollStudentsClient = grpc.ClientStreamingClient[EnrollmentRequest, SetQuestionResponse]
+
+func (c *testServiceClient) GetStudentsPerTest(ctx context.Context, in *GetStudentsPerTestRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[studentpb.Student], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &TestService_ServiceDesc.Streams[2], TestService_GetStudentsPerTest_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[GetStudentsPerTestRequest, studentpb.Student]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TestService_GetStudentsPerTestClient = grpc.ServerStreamingClient[studentpb.Student]
+
 // TestServiceServer is the server API for TestService service.
 // All implementations must embed UnimplementedTestServiceServer
 // for forward compatibility.
@@ -81,6 +118,8 @@ type TestServiceServer interface {
 	GetTest(context.Context, *GetTestRequest) (*Test, error)
 	SetTest(context.Context, *Test) (*SetTestResponse, error)
 	SetQuestion(grpc.ClientStreamingServer[Question, SetQuestionResponse]) error
+	EnrollStudents(grpc.ClientStreamingServer[EnrollmentRequest, SetQuestionResponse]) error
+	GetStudentsPerTest(*GetStudentsPerTestRequest, grpc.ServerStreamingServer[studentpb.Student]) error
 	mustEmbedUnimplementedTestServiceServer()
 }
 
@@ -99,6 +138,12 @@ func (UnimplementedTestServiceServer) SetTest(context.Context, *Test) (*SetTestR
 }
 func (UnimplementedTestServiceServer) SetQuestion(grpc.ClientStreamingServer[Question, SetQuestionResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method SetQuestion not implemented")
+}
+func (UnimplementedTestServiceServer) EnrollStudents(grpc.ClientStreamingServer[EnrollmentRequest, SetQuestionResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method EnrollStudents not implemented")
+}
+func (UnimplementedTestServiceServer) GetStudentsPerTest(*GetStudentsPerTestRequest, grpc.ServerStreamingServer[studentpb.Student]) error {
+	return status.Errorf(codes.Unimplemented, "method GetStudentsPerTest not implemented")
 }
 func (UnimplementedTestServiceServer) mustEmbedUnimplementedTestServiceServer() {}
 func (UnimplementedTestServiceServer) testEmbeddedByValue()                     {}
@@ -164,6 +209,24 @@ func _TestService_SetQuestion_Handler(srv interface{}, stream grpc.ServerStream)
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type TestService_SetQuestionServer = grpc.ClientStreamingServer[Question, SetQuestionResponse]
 
+func _TestService_EnrollStudents_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(TestServiceServer).EnrollStudents(&grpc.GenericServerStream[EnrollmentRequest, SetQuestionResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TestService_EnrollStudentsServer = grpc.ClientStreamingServer[EnrollmentRequest, SetQuestionResponse]
+
+func _TestService_GetStudentsPerTest_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetStudentsPerTestRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TestServiceServer).GetStudentsPerTest(m, &grpc.GenericServerStream[GetStudentsPerTestRequest, studentpb.Student]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TestService_GetStudentsPerTestServer = grpc.ServerStreamingServer[studentpb.Student]
+
 // TestService_ServiceDesc is the grpc.ServiceDesc for TestService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -185,6 +248,16 @@ var TestService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "SetQuestion",
 			Handler:       _TestService_SetQuestion_Handler,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "EnrollStudents",
+			Handler:       _TestService_EnrollStudents_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "GetStudentsPerTest",
+			Handler:       _TestService_GetStudentsPerTest_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "testpb/test.proto",

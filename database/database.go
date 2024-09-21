@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	_ "github.com/lib/pq"
 
@@ -59,4 +60,33 @@ func (r *PostgresRepository) SetTest(ctx context.Context, test *models.Test) err
 func (r *PostgresRepository) SetQuestion(ctx context.Context, question *models.Question) error {
 	_, err := r.db.ExecContext(ctx, "INSERT INTO questions (id, test_id, question, answer) VALUES ($1, $2, $3, $4)", question.Id, question.TestId, question.Question, question.Answer)
 	return err
+}
+
+func (r *PostgresRepository) SetEnrollment(ctx context.Context, enrollment *models.Enrollment) error {
+	_, err := r.db.ExecContext(ctx, "INSERT INTO enrollments (student_id, test_id) VALUES ($1, $2)", enrollment.StudentId, enrollment.TestId)
+	return err
+}
+
+func (r *PostgresRepository) GetStudentsPerTest(ctx context.Context, testId string) ([]*models.Student, error) {
+	rows, err := r.db.QueryContext(ctx, "SELECT id, name, age FROM students WHERE id IN (SELECT student_id FROM enrollments WHERE test_id = $1)", testId)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	students := make([]*models.Student, 0)
+	for rows.Next() {
+		var student models.Student
+		if err := rows.Scan(&student.Id, &student.Name, &student.Age); err != nil {
+			return nil, err
+		}
+		students = append(students, &student)
+	}
+
+	return students, nil
 }

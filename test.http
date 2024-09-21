@@ -1,4 +1,6 @@
 proto < ./testpb/test.proto
+proto < ./studentpb/student.proto
+
 @host=localhost:5061
 
 GRPC /TestService/GetTest
